@@ -38,8 +38,19 @@ pub const MAX_RX_PACKET_SIZE: usize = 1583;
 // Maximum UDP TX packet size per Matter spec
 pub const MAX_TX_PACKET_SIZE: usize = 1280 - 40/*IPV6 header size*/ - 8/*UDP header size*/;
 
-// Maximum TCP RX packet size per Matter spec
-pub const MAX_RX_LARGE_PACKET_SIZE: usize = 1024 * 1024;
+// Maximum TCP RX packet size: 1 MiB per Matter spec, unless capped by one of the
+// `large-buffers-*` features (the largest enabled cap wins).
+cfg_if::cfg_if! {
+    if #[cfg(feature = "large-buffers-256k")] {
+        pub const MAX_RX_LARGE_PACKET_SIZE: usize = 256 * 1024;
+    } else if #[cfg(feature = "large-buffers-64k")] {
+        pub const MAX_RX_LARGE_PACKET_SIZE: usize = 64 * 1024;
+    } else if #[cfg(feature = "large-buffers-16k")] {
+        pub const MAX_RX_LARGE_PACKET_SIZE: usize = 16 * 1024;
+    } else {
+        pub const MAX_RX_LARGE_PACKET_SIZE: usize = 1024 * 1024;
+    }
+}
 
 // Maximum TCP TX packet size per Matter spec
 pub const MAX_TX_LARGE_PACKET_SIZE: usize = MAX_RX_LARGE_PACKET_SIZE;
